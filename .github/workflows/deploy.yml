@@ -34,16 +34,10 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: List build output
+      - name: List all output directories
         run: |
-          echo "=== dist/ ==="
-          ls -la dist/ || echo "no dist/"
-          echo "=== dist/client/ ==="
-          ls -la dist/client/ || echo "no dist/client/"
-          echo "=== dist/public/ ==="
-          ls -la dist/public/ || echo "no dist/public/"
-          echo "=== Find index.html ==="
-          find dist -name "index.html" 2>/dev/null || echo "no index.html found"
+          echo "=== All dist files ==="
+          find dist -type f | head -50
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -51,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist/client'
+          path: './dist/.output/public'
 
   deploy:
     environment:
