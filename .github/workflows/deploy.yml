@@ -34,10 +34,39 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: List all output directories
+      - name: Create index.html
         run: |
-          echo "=== All dist files ==="
-          find dist -type f | head -50
+          # Find the main entry JS file (the larger one, not chunks)
+          JS_FILE=$(ls -S dist/client/assets/*.js | head -1 | xargs basename)
+          CSS_FILE=$(ls dist/client/assets/*.css 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "")
+          BASE="/time-to-decide"
+          echo "Using JS: $JS_FILE, CSS: $CSS_FILE"
+          
+          cat > dist/client/index.html << HTMLEOF
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Time to Decide</title>
+              <script>window.__BASE__ = "$BASE";<\/script>
+          EOF
+          
+          if [ -n "$CSS_FILE" ]; then
+            echo "    <link rel=\"stylesheet\" crossorigin href=\"$BASE/assets/$CSS_FILE\">" >> dist/client/index.html
+          fi
+          
+          cat >> dist/client/index.html << HTMLEOF2
+            </head>
+            <body>
+              <div id="root"></div>
+              <script type="module" crossorigin src="$BASE/assets/$JS_FILE"></script>
+            </body>
+          </html>
+          HTMLEOF2
+          
+          echo "=== index.html created ==="
+          cat dist/client/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -45,7 +74,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist/.output/public'
+          path: './dist/client'
 
   deploy:
     environment:
