@@ -36,36 +36,33 @@ jobs:
 
       - name: Create index.html
         run: |
-          # Find the main entry JS file (the larger one, not chunks)
           JS_FILE=$(ls -S dist/client/assets/*.js | head -1 | xargs basename)
           CSS_FILE=$(ls dist/client/assets/*.css 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "")
           BASE="/time-to-decide"
           echo "Using JS: $JS_FILE, CSS: $CSS_FILE"
-          
-          cat > dist/client/index.html << HTMLEOF
-          <!DOCTYPE html>
-          <html lang="en">
+          python3 -c "
+          import os
+          js = os.environ.get('JS_FILE', '')
+          css = os.environ.get('CSS_FILE', '')
+          base = '/time-to-decide'
+          css_tag = f'<link rel=\"stylesheet\" crossorigin href=\"{base}/assets/{css}\">' if css else ''
+          html = f'''<!DOCTYPE html>
+          <html lang=\"en\">
             <head>
-              <meta charset="UTF-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta charset=\"UTF-8\" />
+              <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
               <title>Time to Decide</title>
-              <script>window.__BASE__ = "$BASE";<\/script>
-          EOF
-          
-          if [ -n "$CSS_FILE" ]; then
-            echo "    <link rel=\"stylesheet\" crossorigin href=\"$BASE/assets/$CSS_FILE\">" >> dist/client/index.html
-          fi
-          
-          cat >> dist/client/index.html << HTMLEOF2
+              {css_tag}
             </head>
             <body>
-              <div id="root"></div>
-              <script type="module" crossorigin src="$BASE/assets/$JS_FILE"></script>
+              <div id=\"root\"></div>
+              <script type=\"module\" crossorigin src=\"{base}/assets/{js}\"></script>
             </body>
-          </html>
-          HTMLEOF2
-          
-          echo "=== index.html created ==="
+          </html>'''
+          with open('dist/client/index.html', 'w') as f:
+            f.write(html)
+          print('index.html created')
+          " JS_FILE="$JS_FILE" CSS_FILE="$CSS_FILE"
           cat dist/client/index.html
 
       - name: Setup Pages
