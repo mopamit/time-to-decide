@@ -24,47 +24,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
         env:
           NODE_ENV: production
-
-      - name: Create index.html
-        run: |
-          JS_FILE=$(ls -S dist/client/assets/*.js | head -1 | xargs basename)
-          CSS_FILE=$(ls dist/client/assets/*.css 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "")
-          export JS_FILE CSS_FILE
-          BASE="/time-to-decide"
-          echo "Using JS: $JS_FILE, CSS: $CSS_FILE"
-          python3 -c "
-          import os
-          js = os.environ.get('JS_FILE', '')
-          css = os.environ.get('CSS_FILE', '')
-          base = '/time-to-decide'
-          css_tag = f'<link rel=\"stylesheet\" crossorigin href=\"{base}/assets/{css}\">' if css else ''
-          html = f'''<!DOCTYPE html>
-          <html lang=\"en\">
-            <head>
-              <meta charset=\"UTF-8\" />
-              <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
-              <title>Time to Decide</title>
-              {css_tag}
-            </head>
-            <body>
-              <div id=\"root\"></div>
-              <script type=\"module\" crossorigin src=\"{base}/assets/{js}\"></script>
-            </body>
-          </html>'''
-          with open('dist/client/index.html', 'w') as f:
-            f.write(html)
-          print('index.html created')
-                    "
-          cat dist/client/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -72,7 +41,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist/client'
+          path: './dist'
 
   deploy:
     environment:
